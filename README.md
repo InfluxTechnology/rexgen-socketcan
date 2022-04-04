@@ -1,6 +1,4 @@
-# rexgen-socketcan
-
-Influx Technology LTD - ReXgen SocketCAN Driver for linux
+# Influx Technology LTD - ReXgen SocketCAN Driver for linux
 ============================================================
 
 
