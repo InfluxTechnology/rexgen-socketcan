@@ -194,7 +194,7 @@ static void read_bulk_callback(struct urb *urb)
         while (pos < live_size)
         {
             pos+= ptr2rec(&rec, usb_buff + pos);
-            if (rec.uid >= 100 && rec.uid < 100 + CAN_CHANNELS)
+            if (rec.uid >= 100 && rec.uid < 100 + dev->nchannels)
                 can2socket(dev, &rec);
         }
         usb_buff += 512;
