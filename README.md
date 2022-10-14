@@ -48,8 +48,8 @@ Using SocketCAN
    
    and receive it with 
    
-   "candump can0"
-   or
+   "candump can0"  
+   or  
    "candump can0 -x" for extra details
    
    As a prerequisite for this, is a connected and properly configured bus with
