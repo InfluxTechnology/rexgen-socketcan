@@ -24,11 +24,11 @@ Using SocketCAN
    "sudo ip link set can0 type can bitrate 500000"
    
    If you need to setup CAN FD with bitrate of 500Kbit and data bitrate of 8Mbit  
-   "sudo ip link set can0 type can bitrate 1000000 dbitrate 8000000 fd on"
+   "sudo ip link set can0 type can bitrate 500000 dbitrate 8000000 fd on"
    
    We support loopback mode and listen-only mode. Typical socket can syntax is  
-   "sudo ip link set can0 type can bitrate 1000000 dbitrate 8000000 fd on loopback on|off"  
-   "sudo ip link set can0 type can bitrate 1000000 dbitrate 8000000 fd on listen-only on|off"
+   "sudo ip link set can0 type can bitrate 500000 dbitrate 8000000 fd on loopback on|off"  
+   "sudo ip link set can0 type can bitrate 500000 dbitrate 8000000 fd on listen-only on|off"
    
    We also support CANFD non ISO mode via fd-non-iso on|off
 
