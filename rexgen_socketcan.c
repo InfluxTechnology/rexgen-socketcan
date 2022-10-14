@@ -507,6 +507,10 @@ static int on_open(struct net_device *netdev)
         goto error;
     }
 
+    /*usb_set_bittiming(netdev);
+    if (net->can.ctrlmode & CAN_CTRLMODE_FD)
+        usb_set_data_bittiming(netdev);*/
+
     err = usb_can_bus_on(dev, channel);
     if (err)
     {
@@ -532,14 +536,29 @@ error:
 
 static int on_close(struct net_device *netdev)
 {
-    printk("%s: Usb closing...", DeviceName);
     struct rexgen_net *net = netdev_priv(netdev);
- 
-    netif_stop_queue(netdev);
+    struct rexgen_usb *dev = net->dev;
+    int err;
+    unsigned short channel = net->channel;
+
+    err = usb_can_bus_off(dev, channel);
+    if (err)
+    {
+        printk("%s: Cannot turn off channel %i, error %i", DeviceName, net->channel, err);
+    }
+
+    err = usb_can_bus_close(dev, channel);
+    if (err)
+    {
+        printk("%s: Cannot close channel %i, error %i", DeviceName, net->channel, err);
+    }
+
+    printk("%s: Closing net socket...", DeviceName);
+    //netif_stop_queue(netdev);
     unlink_tx_urbs(net);
     net->can.state = CAN_STATE_STOPPED;
     close_candev(net->netdev);
-    printk("%s: Usb closed!", DeviceName);
+    printk("%s: Socket closed!", DeviceName);
     return 0;
 }
 

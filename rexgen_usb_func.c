@@ -214,7 +214,7 @@ int usb_set_bittiming(struct net_device *netdev)
 
     if (USB_CMD_DEBUG)
     {
-        printk("CAN bittiming");
+        printk("%s: CAN bittiming", DeviceName);
         printk("%s:      bitrate - %i", DeviceName, bt->bitrate);
         printk("%s: sample_point - %i", DeviceName, bt->sample_point);
         printk("%s:           tq - %i", DeviceName, bt->tq);
@@ -247,7 +247,7 @@ int usb_set_data_bittiming(struct net_device *netdev)
 
     if (USB_CMD_DEBUG)
     {
-        printk("CANFD bittiming");
+        printk("%s: CANFD bittiming", DeviceName);
         printk("%s:      bitrate - %i", DeviceName, bt->bitrate);
         printk("%s: sample_point - %i", DeviceName, bt->sample_point);
         printk("%s:           tq - %i", DeviceName, bt->tq);
@@ -288,7 +288,27 @@ int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel, unsigned ch
     }
     else
     {
-        printk("%s: Channel %i is opened", DeviceName, channel);
+        printk("%s: Channel %i is opened with flags %u", DeviceName, channel, flags);
+        return SUCCESS;
+    }
+}
+
+int usb_can_bus_close(struct rexgen_usb *dev, unsigned short channel)
+{
+    int res;
+
+    cmdCANBusClose.cmd_data[2] = channel;
+    cmdCANBusClose.cmd_data[3] = channel >> 8;
+    
+    res = send_cmd_usb(dev, &cmdCANBusClose);
+    if (res)
+    {
+       printk("%s: Can not close channel %i", DeviceName, channel);
+       return res;
+    }
+    else
+    {
+        printk("%s: Channel %i is closed", DeviceName, channel);
         return SUCCESS;
     }
 }
@@ -310,6 +330,27 @@ int usb_can_bus_on(struct rexgen_usb *dev, unsigned short channel)
     else
     {
         printk("%s: Channel %i is turned on", DeviceName, channel);
+        return SUCCESS;
+    }
+}
+
+int usb_can_bus_off(struct rexgen_usb *dev, unsigned short channel)
+{
+    int res;
+
+    memcpy(&(cmdCANBusOff.cmd_data[2]), &channel, 2);
+    cmdCANBusOff.cmd_data[2] = channel;
+    cmdCANBusOff.cmd_data[3] = channel >> 8;
+
+    res = send_cmd_usb(dev, &cmdCANBusOff);
+    if (res)
+    {       
+       printk("%s: Can not stop channel %i", DeviceName, channel);
+       return res;
+    }
+    else
+    {
+        printk("%s: Channel %i is turned off", DeviceName, channel);
         return SUCCESS;
     }
 }

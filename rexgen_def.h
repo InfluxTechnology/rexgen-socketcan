@@ -83,9 +83,9 @@ static const struct usb_device_id influx_usb_table [] = {
 #define USB_CMD_CAN_INTERFACE_DISABLE		0x32
 #define USB_CMD_CAN_BUS_COUNT               0x33
 #define USB_CMD_CAN_BUS_OPEN			    0x34
-//#define USB_CMD_CAN_BUS_CLOSE             0x35
+#define USB_CMD_CAN_BUS_CLOSE               0x35
 #define USB_CMD_CAN_BUS_ON                  0x36      
-//#define USB_CMD_CAN_BUS_OFF			    0x37
+#define USB_CMD_CAN_BUS_OFF			        0x37
 #define USB_CMD_CAN_PARAM_SET			    0x38
 //#define USB_CMD_CAN_PARAM_GET             0x39
 #define USB_CMD_CAN_DATA_PARAM_SET		    0x3a
@@ -131,7 +131,9 @@ static cmd_struct cmdCANBlockUIDGet = {5, 10, {USB_CMD_CAN_BLOCK_UID_GET, 0x00, 
 static cmd_struct cmdCANParamSet = {12, 10, {USB_CMD_CAN_PARAM_SET, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 static cmd_struct cmdCANDataParamSet = {12, 10, {USB_CMD_CAN_DATA_PARAM_SET, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 static cmd_struct cmdCANBusOpen = {5, 10, {USB_CMD_CAN_BUS_OPEN, 0x00, 0, 0, CAN_INTERFACE_LISTENONLY}};
+static cmd_struct cmdCANBusClose = {5, 10, {USB_CMD_CAN_BUS_CLOSE, 0x00, 0, 0}};
 static cmd_struct cmdCANBusOn = {4, 10, {USB_CMD_CAN_BUS_ON, 0x00, 0, 0}};
+static cmd_struct cmdCANBusOff = {4, 10, {USB_CMD_CAN_BUS_OFF, 0x00, 0, 0}};
 static const cmd_struct cmmdUSBStartLiveData = {3, 7, {USB_CMD_START_LIVE_DATA, 0x00, 0x00}}; //Third Param is Channel 
 static const cmd_struct cmmdUSBStopLiveData = {3, 7, {USB_CMD_STOP_LIVE_DATA, 0x00, 0}};  //Third Param is Channel
 static const cmd_struct cmmdUSBGetLiveData = {3, 16, {USB_CMD_GET_LIVE_DATA, 0x00, 0}};  //Third Param is Channel
@@ -243,7 +245,9 @@ int usb_bus_start(struct rexgen_usb_net_priv *priv);
 int usb_start_live_data(struct rexgen_usb *dev);
 int usb_stop_live_data(struct rexgen_usb *dev);
 int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel, unsigned char flags);
+int usb_can_bus_close(struct rexgen_usb *dev, unsigned short channel);
 int usb_can_bus_on(struct rexgen_usb *dev, unsigned short channel);
+int usb_can_bus_off(struct rexgen_usb *dev, unsigned short channel);
 
 unsigned short livedata_size(void *buff, int len);
 int ptr2rec(usb_record *rec, void *buff);
