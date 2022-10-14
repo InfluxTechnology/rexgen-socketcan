@@ -88,9 +88,15 @@ static const struct usb_device_id influx_usb_table [] = {
 //#define USB_CMD_CAN_BUS_OFF			    0x37
 #define USB_CMD_CAN_PARAM_SET			    0x38
 //#define USB_CMD_CAN_PARAM_GET             0x39
-//#define USB_CMD_CAN_DATA_PARAM_SET		0x3a
+#define USB_CMD_CAN_DATA_PARAM_SET		    0x3a
 //#define USB_CMD_CAN_DATA_PARAM_GET		0x3b
 #define USB_CMD_CAN_BLOCK_UID_GET           0x3c
+
+// CAN interface flags
+#define CAN_INTERFACE_LISTENONLY        1
+#define CAN_INTERFACE_CAN_FD_ISO        2
+#define CAN_INTERFACE_CAN_FD_NON_ISO    4
+#define CAN_INTERFACE_LOOPBACK          8
 
 // CAN blocks UID indexes
 #define IDX_CAN_BLOCK_UID_RX			0
@@ -123,7 +129,8 @@ static const cmd_struct cmdCANIntfEnable = {2, 10, {USB_CMD_CAN_INTERFACE_ENABLE
 static const cmd_struct cmdCANIntfDisable = {2, 10, {USB_CMD_CAN_INTERFACE_DISABLE, 0x00}};
 static cmd_struct cmdCANBlockUIDGet = {5, 10, {USB_CMD_CAN_BLOCK_UID_GET, 0x00, 0, 0, 0}};
 static cmd_struct cmdCANParamSet = {12, 10, {USB_CMD_CAN_PARAM_SET, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-static cmd_struct cmdCANBusOpen = {5, 10, {USB_CMD_CAN_BUS_OPEN, 0x00, 0, 0, 0}};
+static cmd_struct cmdCANDataParamSet = {12, 10, {USB_CMD_CAN_DATA_PARAM_SET, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+static cmd_struct cmdCANBusOpen = {5, 10, {USB_CMD_CAN_BUS_OPEN, 0x00, 0, 0, CAN_INTERFACE_LISTENONLY}};
 static cmd_struct cmdCANBusOn = {4, 10, {USB_CMD_CAN_BUS_ON, 0x00, 0, 0}};
 static const cmd_struct cmmdUSBStartLiveData = {3, 7, {USB_CMD_START_LIVE_DATA, 0x00, 0x00}}; //Third Param is Channel 
 static const cmd_struct cmmdUSBStopLiveData = {3, 7, {USB_CMD_STOP_LIVE_DATA, 0x00, 0}};  //Third Param is Channel
@@ -156,6 +163,7 @@ static const struct usb_config rex_usb_cfg =
     },
     .timestamp_freq = 1,
     .bittiming_const = &bittiming_def,
+    .data_bittiming_const = &bittiming_def,
 };
 
 struct rexgen_cmd {
@@ -230,10 +238,11 @@ int usb_get_num_channels(struct rexgen_usb *dev);
 int usb_can_intf_enable(struct rexgen_usb *dev);
 int usb_can_intf_disable(struct rexgen_usb *dev);
 int usb_set_bittiming(struct net_device *netdev);
+int usb_set_data_bittiming(struct net_device *netdev);
 int usb_bus_start(struct rexgen_usb_net_priv *priv);
 int usb_start_live_data(struct rexgen_usb *dev);
 int usb_stop_live_data(struct rexgen_usb *dev);
-int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel);
+int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel, unsigned char flags);
 int usb_can_bus_on(struct rexgen_usb *dev, unsigned short channel);
 
 unsigned short livedata_size(void *buff, int len);

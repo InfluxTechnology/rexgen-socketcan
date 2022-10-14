@@ -214,6 +214,7 @@ int usb_set_bittiming(struct net_device *netdev)
 
     if (USB_CMD_DEBUG)
     {
+        printk("CAN bittiming");
         printk("%s:      bitrate - %i", DeviceName, bt->bitrate);
         printk("%s: sample_point - %i", DeviceName, bt->sample_point);
         printk("%s:           tq - %i", DeviceName, bt->tq);
@@ -238,13 +239,46 @@ int usb_set_bittiming(struct net_device *netdev)
     return send_cmd_usb(dev, &cmdCANParamSet);
 }
 
-int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel)
+int usb_set_data_bittiming(struct net_device *netdev)
+{
+    struct rexgen_net *net = netdev_priv(netdev);
+    struct can_bittiming *bt = &net->can.data_bittiming;
+    struct rexgen_usb *dev = net->dev;
+
+    if (USB_CMD_DEBUG)
+    {
+        printk("CANFD bittiming");
+        printk("%s:      bitrate - %i", DeviceName, bt->bitrate);
+        printk("%s: sample_point - %i", DeviceName, bt->sample_point);
+        printk("%s:           tq - %i", DeviceName, bt->tq);
+        printk("%s:     prop_seg - %i", DeviceName, bt->prop_seg);
+        printk("%s:   phase_seg1 - %i", DeviceName, bt->phase_seg1);
+        printk("%s:   phase_seg2 - %i", DeviceName, bt->phase_seg2);
+        printk("%s:          sjw - %i", DeviceName, bt->sjw);
+        printk("%s:          brp - %i", DeviceName, bt->brp);
+    }
+
+    cmdCANDataParamSet.cmd_data[2] = net->channel; 
+    cmdCANDataParamSet.cmd_data[3] = net->channel >> 8;
+    cmdCANDataParamSet.cmd_data[4] = bt->bitrate; 
+    cmdCANDataParamSet.cmd_data[5] = bt->bitrate >> 8; 
+    cmdCANDataParamSet.cmd_data[6] = bt->bitrate >> 16;
+    cmdCANDataParamSet.cmd_data[7] = bt->bitrate >> 24;
+    cmdCANDataParamSet.cmd_data[8] = bt->prop_seg + bt->phase_seg1;   
+    cmdCANDataParamSet.cmd_data[9] = bt->phase_seg2;
+    cmdCANDataParamSet.cmd_data[10] = bt->sjw;      
+    cmdCANDataParamSet.cmd_data[11] = bt->brp; 
+  
+    return send_cmd_usb(dev, &cmdCANDataParamSet);
+}
+
+int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel, unsigned char flags)
 {
     int res;
 
     cmdCANBusOpen.cmd_data[2] = channel;
     cmdCANBusOpen.cmd_data[3] = channel >> 8;
-    cmdCANBusOpen.cmd_data[4] = 0; // CAN only 
+    cmdCANBusOpen.cmd_data[4] = flags;
     
     res = send_cmd_usb(dev, &cmdCANBusOpen);
     if (res)
@@ -272,7 +306,7 @@ int usb_can_bus_on(struct rexgen_usb *dev, unsigned short channel)
     {       
        printk("%s: Can not start channel %i", DeviceName, channel);
        return res;
-    }    
+    }
     else
     {
         printk("%s: Channel %i is turned on", DeviceName, channel);
@@ -323,6 +357,8 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
         cfdf->can_id = canid;
         dataptr = cfdf->data;
         canlen = &cfdf->len;
+        if (flags & DataFrame_BRS)
+            cfdf->flags |= 0x01;
     }
     else
     {

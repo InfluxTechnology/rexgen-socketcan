@@ -19,10 +19,19 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+// Release notes:
+// Version 2.10 - Fixed issues with IDE, Added support for Can FD, Can FD non ISO, ListenOnly, Loopback
+
 #include <linux/version.h>
 #include "rexgen_def.h"
 
+MODULE_AUTHOR("Influx Technology LTD <support@influxtechnology.com>");
+MODULE_DESCRIPTION("CAN driver for RexGen CAN USB devices");
+MODULE_LICENSE("GPL v2");
+MODULE_VERSION("2.10");
+MODULE_INFO(release_date, "October 14, 2022");
 MODULE_DEVICE_TABLE (usb, influx_usb_table);
+
 
 void printkBuffer(void *data, int len, char* prefix)
 {
@@ -316,7 +325,11 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
     unsigned int i;
     unsigned long flags;
     struct can_frame *cf = (struct can_frame *)skb->data;
+    struct canfd_frame *cfdf = (struct canfd_frame *)skb->data;
     unsigned char *canlen;
+    canid_t *canid;
+    unsigned char canflags;
+    unsigned char *candata;
 
     if (can_dropped_invalid_skb(netdev, skb))
         return NETDEV_TX_OK;
@@ -351,11 +364,26 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         goto freeurb;
     }
 
-    #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 11, 0))
-        canlen = &cf->len;
-    #else
-        canlen = &cf->can_dlc;
-    #endif
+    canflags = 0;
+    if (skb->protocol == htons(ETH_P_CAN)) {
+        #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 11, 0))
+            canlen = &cf->len;
+        #else
+            canlen = &cf->can_dlc;
+        #endif
+        canid = &cf->can_id;
+        candata = &cf->data[0];
+    } else if (skb->protocol == htons(ETH_P_CANFD)) {
+        canid = &cfdf->can_id;
+        canflags |= DataFrame_EDL;
+        canlen = &cfdf->len;
+        candata = &cfdf->data[0];
+        if (0x01 & cfdf->flags)
+            canflags |= DataFrame_BRS;
+    }
+    if (0x80000000U & *canid)
+        canflags |= DataFrame_IDE;
+    *canid &= 0x1FFFFFFFU;
 
     cmd_len = 4 + 9 + *canlen;
     buf = kmalloc(512, GFP_ATOMIC);
@@ -366,11 +394,12 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         *((unsigned char*)(buf + 3)) = *canlen;
         // Inf data
         *((unsigned long*)(buf + 4)) = 0;
-        *((unsigned long*)(buf + 8)) = cf->can_id;
-        *((unsigned char*)(buf + 12)) = 0;
+        *((unsigned long*)(buf + 8)) = *canid;
+        *((unsigned char*)(buf + 12)) = canflags;
         // Can data
-        memcpy(buf + 13, cf->data, *canlen);
+        memcpy(buf + 13, candata, *canlen);
     }
+
     if (!buf) {
         stats->tx_dropped++;
         dev_kfree_skb(skb);
@@ -461,8 +490,17 @@ static int on_open(struct net_device *netdev)
     {
         printk("%s: Firmware %i.%i.%i.%i", DeviceName, dev->fw_ver[0], dev->fw_ver[1], dev->fw_ver[2], dev->fw_ver[3]);
     }
+    unsigned char flags = 0;
+    if (net->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
+        flags |= CAN_INTERFACE_LISTENONLY;
+    if (net->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
+        flags |= CAN_INTERFACE_LOOPBACK;
+    if (net->can.ctrlmode & CAN_CTRLMODE_FD)
+        flags |= CAN_INTERFACE_CAN_FD_ISO;
+    if (net->can.ctrlmode & CAN_CTRLMODE_FD_NON_ISO)
+        flags |= CAN_INTERFACE_CAN_FD_NON_ISO;
 
-    err = usb_can_bus_open(dev, channel);
+    err = usb_can_bus_open(dev, channel, flags);
     if (err)
     {
         printk("%s: Cannot open channel %i, error %i", DeviceName, net->channel, err);
@@ -551,7 +589,11 @@ static int init_interface(struct rexgen_usb *dev, const struct usb_device_id *id
     init_usb_anchor(&net->tx_submitted);
     init_completion(&net->start_comp);
     init_completion(&net->stop_comp);
-    net->can.ctrlmode_supported = 0;
+    net->can.ctrlmode_supported = 
+        CAN_CTRLMODE_LISTENONLY |
+        CAN_CTRLMODE_LOOPBACK | 
+        CAN_CTRLMODE_FD | 
+        CAN_CTRLMODE_FD_NON_ISO;
 
     net->dev = dev;
     net->netdev = netdev;
@@ -565,8 +607,12 @@ static int init_interface(struct rexgen_usb *dev, const struct usb_device_id *id
     net->can.bittiming_const = rex_usb_cfg.bittiming_const;
     net->can.do_set_bittiming = usb_set_bittiming;
     net->can.do_get_berr_counter = get_berr_counter;
+    if (net->can.ctrlmode_supported & CAN_CTRLMODE_FD) {
+        net->can.data_bittiming_const = rex_usb_cfg.data_bittiming_const;
+        net->can.do_set_data_bittiming = usb_set_data_bittiming;
+    }
 
-    netdev->flags |= IFF_ECHO;	
+    netdev->flags |= IFF_ECHO;
     netdev->netdev_ops = &rex_ops;
 
     SET_NETDEV_DEV(netdev, &dev->intf->dev);
@@ -738,9 +784,3 @@ static struct usb_driver rexgen_usb_driver = {
 };
 
 module_usb_driver(rexgen_usb_driver);
-
-MODULE_AUTHOR("Influx Technology LTD <support@influxtechnology.com>");
-MODULE_DESCRIPTION("CAN driver for RexGen CAN/USB devices");
-MODULE_LICENSE("GPL v2");
-
-
