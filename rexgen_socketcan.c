@@ -341,7 +341,7 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         return NETDEV_TX_OK;
     }
 
-    spin_lock_irqsave(&net->tx_contexts_lock, flags);
+    /*spin_lock_irqsave(&net->tx_contexts_lock, flags);
     for (i = 0; i < USB_MAX_TX_URBS; i++) {
         if (net->tx_contexts[i].echo_index == USB_MAX_TX_URBS) {
             context = &net->tx_contexts[i];
@@ -354,15 +354,17 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
             break;
         }
     }
-    spin_unlock_irqrestore(&net->tx_contexts_lock, flags);
+    spin_unlock_irqrestore(&net->tx_contexts_lock, flags);*/
+    context = &net->tx_contexts[0];
+    context->echo_index = 0;
 
     // * This should never happen; it implies a flow control bug * /
-    if (!context) {
+    /*if (!context) {
         netdev_warn(netdev, "cannot find free context\n");
 
         ret = NETDEV_TX_BUSY;
         goto freeurb;
-    }
+    }*/
 
     canflags = 0;
     if (skb->protocol == htons(ETH_P_CAN)) {
@@ -398,14 +400,12 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         *((unsigned char*)(buf + 12)) = canflags;
         // Can data
         memcpy(buf + 13, candata, *canlen);
-    }
-
-    if (!buf) {
+    } else {
         stats->tx_dropped++;
         dev_kfree_skb(skb);
         spin_lock_irqsave(&net->tx_contexts_lock, flags);
 
-        context->echo_index = USB_MAX_TX_URBS;
+        /*context->echo_index = USB_MAX_TX_URBS;*/
         --net->active_tx_contexts;
         netif_wake_queue(netdev);
 
@@ -424,7 +424,7 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
 
     usb_fill_bulk_urb(urb, dev->udev,
               usb_sndbulkpipe(dev->udev, dev->live_out->bEndpointAddress),
-              buf, cmd_len, write_bulk_callback, context);
+              buf, cmd_len, write_bulk_callback, NULL/*context*/);
     usb_anchor_urb(urb, &net->tx_submitted);
 
     err = usb_submit_urb(urb, GFP_ATOMIC);
@@ -437,7 +437,7 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         #else
             can_free_echo_skb(netdev, context->echo_index);
         #endif
-        context->echo_index = USB_MAX_TX_URBS;
+        //context->echo_index = USB_MAX_TX_URBS;
         --net->active_tx_contexts;
         netif_wake_queue(netdev);
 
@@ -631,7 +631,7 @@ static int init_interface(struct rexgen_usb *dev, const struct usb_device_id *id
         net->can.do_set_data_bittiming = usb_set_data_bittiming;
     }
 
-    netdev->flags |= IFF_ECHO;
+    netdev->flags = IFF_NOARP | IFF_ECHO | IFF_LOOPBACK;
     netdev->netdev_ops = &rex_ops;
 
     SET_NETDEV_DEV(netdev, &dev->intf->dev);

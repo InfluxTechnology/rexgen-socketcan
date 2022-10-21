@@ -288,7 +288,7 @@ int usb_can_bus_open(struct rexgen_usb *dev, unsigned short channel, unsigned ch
     }
     else
     {
-        printk("%s: Channel %i is opened with flags %u", DeviceName, channel, flags);
+        printk("%s: Channel %i is opened", DeviceName, channel);
         return SUCCESS;
     }
 }
@@ -377,15 +377,30 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
 
     net = dev->nets[channel];
     stats = &net->netdev->stats;
+    struct can_priv *priv = netdev_priv(net->netdev);
 
-    if (flags & DataFrame_EDL)
-        skb = alloc_canfd_skb(net->netdev, &cfdf);
+    if (flags & DataFrame_DIR)
+    {
+        skb = priv->echo_skb[0];
+        if (flags & DataFrame_EDL)
+            cfdf = (struct canfd_frame*)skb->data;
+        else
+            cf = (struct can_frame*)skb->data;
+    }
     else
-        skb = alloc_can_skb(net->netdev, &cf);
+    {
+        if (flags & DataFrame_EDL)
+            skb = alloc_canfd_skb(net->netdev, &cfdf);
+        else
+            skb = alloc_can_skb(net->netdev, &cf);
+    }
 
-    if (!skb) {
-        stats->rx_dropped++;
-        return;
+    if (!(flags & DataFrame_DIR))
+    {
+        if (!skb) {
+            stats->rx_dropped++;
+            return;
+        }
     }
 
     if (flags & DataFrame_IDE)
@@ -414,10 +429,19 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
 
     *canlen = rec->dlc;
     memcpy(dataptr, &(rec->data[0]), rec->dlc);
-    stats->rx_bytes += rec->dlc;
-    stats->rx_packets++;
 
-    netif_rx(skb);
+    if (flags & DataFrame_DIR)
+    {
+        can_get_echo_skb(net->netdev, 0);
+        can_free_echo_skb(net->netdev, 0);
+    }
+    else
+    {
+        stats->rx_bytes += rec->dlc;
+        stats->rx_packets++;
+
+        netif_rx(skb);
+    }
 }
 
 unsigned short livedata_size(void *buff, int len)
