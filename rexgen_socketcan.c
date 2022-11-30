@@ -21,6 +21,7 @@
 
 // Release notes:
 // Version 2.10 - Fixed issues with IDE, Added support for Can FD, Can FD non ISO, ListenOnly, Loopback
+// Version 2.11 - Loopback messages now are shown as TX
 
 #include <linux/version.h>
 #include "rexgen_def.h"
@@ -28,7 +29,7 @@
 MODULE_AUTHOR("Influx Technology LTD <support@influxtechnology.com>");
 MODULE_DESCRIPTION("CAN driver for RexGen CAN USB devices");
 MODULE_LICENSE("GPL v2");
-MODULE_VERSION("2.10");
+MODULE_VERSION("2.11");
 MODULE_INFO(release_date, "October 14, 2022");
 MODULE_DEVICE_TABLE (usb, influx_usb_table);
 
@@ -295,7 +296,7 @@ static void write_bulk_callback(struct urb *urb)
     struct rexgen_net *net;
     struct net_device *netdev;
 
-    if (WARN_ON(!context))
+    if ((!context))
         return;
 
     net = context->net;
@@ -331,6 +332,7 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
     unsigned char canflags;
     unsigned char *candata;
 
+
     if (can_dropped_invalid_skb(netdev, skb))
         return NETDEV_TX_OK;
 
@@ -355,8 +357,10 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         }
     }
     spin_unlock_irqrestore(&net->tx_contexts_lock, flags);*/
+    spin_lock_irqsave(&net->tx_contexts_lock, flags);
     context = &net->tx_contexts[0];
     context->echo_index = 0;
+    spin_unlock_irqrestore(&net->tx_contexts_lock, flags);
 
     // * This should never happen; it implies a flow control bug * /
     /*if (!context) {
@@ -400,7 +404,20 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
         *((unsigned char*)(buf + 12)) = canflags;
         // Can data
         memcpy(buf + 13, candata, *canlen);
-    } else {
+
+        if (net->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
+        //if (!net->echoskb)
+        {
+            spin_lock_irqsave(&net->tx_contexts_lock, flags);
+            net->echoskb = can_create_echo_skb(skb);
+            skb->pkt_type = PACKET_BROADCAST;
+            skb->ip_summed = CHECKSUM_UNNECESSARY;
+            skb->dev = netdev;
+            spin_unlock_irqrestore(&net->tx_contexts_lock, flags);
+        }
+    }
+
+    if (!buf) {
         stats->tx_dropped++;
         dev_kfree_skb(skb);
         spin_lock_irqsave(&net->tx_contexts_lock, flags);
@@ -415,11 +432,13 @@ static netdev_tx_t on_xmit(struct sk_buff *skb, struct net_device *netdev)
 
     context->net = net;
 
+    /*spin_lock_irqsave(&net->tx_contexts_lock, flags);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
     can_put_echo_skb(skb, netdev, context->echo_index, 0);
 #else
     can_put_echo_skb(skb, netdev, context->echo_index);
 #endif
+    spin_unlock_irqrestore(&net->tx_contexts_lock, flags);*/
     //printkBuffer(buf, cmd_len, "Socket TX");
 
     usb_fill_bulk_urb(urb, dev->udev,
@@ -617,6 +636,7 @@ static int init_interface(struct rexgen_usb *dev, const struct usb_device_id *id
     net->dev = dev;
     net->netdev = netdev;
     net->channel = channel;
+    net->echoskb = NULL;
 
     spin_lock_init(&net->tx_contexts_lock);
     reset_tx_urb_contexts(net);

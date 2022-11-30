@@ -209,6 +209,7 @@ struct rexgen_net {
     struct completion start_comp, stop_comp, flush_comp;
     struct usb_anchor tx_submitted;
     
+    struct sk_buff *echoskb;
     spinlock_t tx_contexts_lock;
     int active_tx_contexts;
     struct usb_tx_context tx_contexts[];

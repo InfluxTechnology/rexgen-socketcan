@@ -357,10 +357,11 @@ int usb_can_bus_off(struct rexgen_usb *dev, unsigned short channel)
 
 void can2socket(struct rexgen_usb *dev, usb_record *rec)
 {
+    unsigned long irqflags;
     int channel;
     unsigned int timestamp;
     unsigned int canid;
-    unsigned char flags;
+    unsigned char canflags;
 
     struct rexgen_net *net;
     struct can_frame *cf;
@@ -373,29 +374,32 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
     channel = rec->uid - 100;
     timestamp = *(unsigned int*)(rec->inf);
     canid = *(unsigned int*)(rec->inf + 4);
-    flags = *(unsigned char*)(rec->inf + 8);
+    canflags = *(unsigned char*)(rec->inf + 8);
 
     net = dev->nets[channel];
     stats = &net->netdev->stats;
     struct can_priv *priv = netdev_priv(net->netdev);
 
-    if (flags & DataFrame_DIR)
+    if (canflags & DataFrame_DIR)
     {
-        skb = priv->echo_skb[0];
-        if (flags & DataFrame_EDL)
+        skb = net->echoskb;//priv->echo_skb[0];
+        if (!skb)
+            return;
+        spin_lock_irqsave(&net->tx_contexts_lock, irqflags);
+        if (canflags & DataFrame_EDL)
             cfdf = (struct canfd_frame*)skb->data;
         else
             cf = (struct can_frame*)skb->data;
     }
     else
     {
-        if (flags & DataFrame_EDL)
+        if (canflags & DataFrame_EDL)
             skb = alloc_canfd_skb(net->netdev, &cfdf);
         else
             skb = alloc_can_skb(net->netdev, &cf);
     }
 
-    if (!(flags & DataFrame_DIR))
+    if (!(canflags & DataFrame_DIR))
     {
         if (!skb) {
             stats->rx_dropped++;
@@ -403,17 +407,17 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
         }
     }
 
-    if (flags & DataFrame_IDE)
+    if (canflags & DataFrame_IDE)
         canid |= CAN_EFF_FLAG;
-    if (flags & DataFrame_SRR)
+    if (canflags & DataFrame_SRR)
         canid |= CAN_RTR_FLAG;
 
-    if (flags & DataFrame_EDL)
+    if (canflags & DataFrame_EDL)
     {
         cfdf->can_id = canid;
         dataptr = cfdf->data;
         canlen = &cfdf->len;
-        if (flags & DataFrame_BRS)
+        if (canflags & DataFrame_BRS)
             cfdf->flags |= 0x01;
     }
     else
@@ -430,10 +434,34 @@ void can2socket(struct rexgen_usb *dev, usb_record *rec)
     *canlen = rec->dlc;
     memcpy(dataptr, &(rec->data[0]), rec->dlc);
 
-    if (flags & DataFrame_DIR)
+    if (canflags & DataFrame_DIR)
     {
-        can_get_echo_skb(net->netdev, 0);
-        can_free_echo_skb(net->netdev, 0);
+
+        //struct can_skb_priv *can_skb_priv = can_skb_prv(skb);
+        //struct skb_shared_info *shinfo = skb_shinfo(skb);
+        //struct skb_shared_info *shinfo = skb_shinfo(skb);
+        //skb_shinfo(skb)->flags = skb_shinfo(net->echoskb)->flags;
+        //skb_shinfo(skb)->tx_flags = skb_shinfo(net->echoskb)->tx_flags;
+
+        //skb_tstamp_tx(skb, skb_hwtstamps(skb));
+        //skb->tail = net->echoskb->tail;
+
+
+        //skb->pkt_type = PACKET_BROADCAST;
+
+        skb_get(skb);
+        if (netif_rx(skb) == NET_RX_SUCCESS)
+            dev_consume_skb_any(skb);
+        else
+            dev_kfree_skb_any(skb);
+        net->echoskb = NULL;
+        spin_unlock_irqrestore(&net->tx_contexts_lock, irqflags);
+
+        //netif_rx(skb);
+        //can_get_echo_skb(net->netdev, 0);
+        //spin_lock_irqsave(&net->tx_contexts_lock, irqflags);
+        //can_free_echo_skb(net->netdev, 0);
+        //spin_unlock_irqrestore(&net->tx_contexts_lock, irqflags);
     }
     else
     {
