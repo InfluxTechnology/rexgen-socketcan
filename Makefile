@@ -7,7 +7,7 @@ MODULE_NAME ?= rexgen_usb
 KERNEL_PATH ?= /lib/modules/`uname -r`
 KDIR ?= $(KERNEL_PATH)/build
 
-REXGEN_SRC_DIR = `pwd`
+REXGEN_SRC_DIR = `pwd`/src
 
 $(info Selected module $(MODULE_NAME))
 
