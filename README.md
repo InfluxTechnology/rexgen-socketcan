@@ -16,6 +16,7 @@ Make sure the can-dev module is loaded properly.
    "sudo modprobe can-dev"
    
 Building and installing of driver with starting the script
+
    "sudo ./do_make.sh"
 
 Using SocketCAN
