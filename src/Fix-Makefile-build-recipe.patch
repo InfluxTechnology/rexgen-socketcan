@@ -1,0 +1,45 @@
+--- Makefile	2023-04-13 06:02:43.841997105 +0000
++++ Makefile.recipe	2023-04-13 06:09:29.848415697 +0000
+@@ -1,31 +1,16 @@
+-#.PHONY: all clean install load uninstall
+-.PHONY: all clean install uninstall
++# SPDX-License-Identifier: GPL-2.0-only
++obj-m += rexgen_usb.o 
++rexgen_usb-y =  rexgen_socketcan.o rexgen_usb_func.o
+ 
+-# Choose which module to build
+-MODULE_NAME ?= rexgen_usb
+-
+-KERNEL_PATH ?= /lib/modules/`uname -r`
+-KDIR ?= $(KERNEL_PATH)/build
+-
+-REXGEN_SRC_DIR = `pwd`/src
+-
+-$(info Selected module $(MODULE_NAME))
++SRC := $(shell pwd)
+ 
+ all:
+-#	@echo $(REXGEN_SRC_DIR)
+-	make -s -C $(KDIR)  M=$(REXGEN_SRC_DIR) modules
++	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
+ 
+-clean:
+-	make -C $(KDIR) M=$(REXGEN_SRC_DIR) clean
++modules_install:
++	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
+ 
+-install:
+-	make -C $(KDIR) M=$(REXGEN_SRC_DIR) modules_install
+-	depmod -a
+-
+-load:
+-	modprobe $(MODULE_NAME)
+-
+-uninstall:
+-	rm $(addprefix $(KERNEL_PATH)/extra/$(MODULE_NAME), .ko .ko.gz .ko.xz) 2>/dev/null || true
+-	rmmod $(MODULE_NAME) 2>/dev/null || true
+-	depmod -a
++clean:
++	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
++	rm -f Module.markers Module.symvers modules.order
++	rm -rf .tmp_versions Modules.symvers
