@@ -9,6 +9,13 @@ https://www.kernel.org/doc/Documentation/networking/can.txt
 
 Getting started
 ---------------
+Prerequisites:
+Make sure the following is installed before proceeding:
+
+1) make
+2) gcc
+3) can-utils is required to use the commands like candump/cansend etc
+
 Make sure the can-dev module is loaded properly. 
    You can check this with "lsmod | grep can-dev"
    If it is not loaded yet you can do this with 
