@@ -38,13 +38,7 @@ sudo ./domake.sh
 
 ## Using Socket CAN
 
-1.  Before you can send and receive data you need to configure
-
-    the interface. To do this you can use the 'ip' tool. For example if you
-
-    want to set the bitrate of 500Kbit (500000 bit) to the can0 interface
-
-    you can do this with&#x20;
+1.  Before you can send and receive data you need to configure the interface. To do this you can use the 'ip' tool. For example if you want to set the bitrate of 500Kbit (500000 bit) to the can0 interface you can do this with&#x20;
 
     "sudo ip link set can0 type can bitrate 500000"
 
@@ -62,11 +56,7 @@ sudo ./domake.sh
 2.  Now the bitrate is set and you can start the interface by typing
 
     &#x20;"sudo ip link set can0 up"
-3.  After this you can send and receive data on can0. At the beginning you may
-
-    just want to check some small communications. To do this you could use the
-
-    tools from "can-utils". For example you could try to send data with
+3.  After this you can send and receive data on can0. At the beginning you may just want to check some small communications. To do this you could use the tools from "can-utils". For example you could try to send data with
 
     "cansend can0 123#112233" - Simple CAN message&#x20;
 
