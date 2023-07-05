@@ -51,3 +51,5 @@ Building and installing of driver with starting the script
     "candump can0 -x" for extra details
 
     As a prerequisite for this, is a connected and properly configured bus with at least two communication partners.
+
+For more details visit our [GitHub](https://github.com/InfluxTechnology/rexgen-socketcan).
