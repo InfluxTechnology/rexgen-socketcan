@@ -52,4 +52,4 @@ Building and installing of driver with starting the script
 
     As a prerequisite for this, is a connected and properly configured bus with at least two communication partners.
 
-For more details visit our [GitHub](https://github.com/InfluxTechnology/rexgen-socketcan).
+For more details visit our [<mark style="color:blue;">GitHub</mark>](https://github.com/InfluxTechnology/rexgen-socketcan).

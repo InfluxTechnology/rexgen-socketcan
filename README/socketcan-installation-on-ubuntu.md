@@ -6,9 +6,9 @@
 sudo apt-get install git
 ```
 
-2.  Clone the repository [https://github.com/InfluxTechnology/rexgen-socketcan.git](https://github.com/InfluxTechnology/rexgen-socketcan.git)
+2.  Clone the repository [<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>](https://github.com/InfluxTechnology/rexgen-socketcan.git)
 
-    &#x20;_git clone_ [_https://github.com/InfluxTechnology/rexgen-socketcan.git_](https://github.com/InfluxTechnology/rexgen-socketcan.git)
+    &#x20;_git clone_ [_<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>_](https://github.com/InfluxTechnology/rexgen-socketcan.git)
 3. Install gcc
 
 <pre class="language-bash"><code class="lang-bash"><strong>sudo apt-get install gcc
