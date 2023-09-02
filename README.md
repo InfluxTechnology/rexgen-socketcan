@@ -16,7 +16,7 @@ Make sure the can-dev module is loaded properly. You can check this with "lsmod 
 
 "sudo modprobe can-dev"
 
-Building and installing the driver with starting the script
+Building and installing the driver while starting the script
 
 "sudo ./do\_make.sh"
 
