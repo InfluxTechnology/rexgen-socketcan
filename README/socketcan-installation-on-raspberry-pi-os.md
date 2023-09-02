@@ -9,9 +9,9 @@
 sudo apt-get install raspberrypi-kernel-headers
 ```
 
-3.  &#x20;   Install can-utils
+3.  Install can-utils
 
-    This will install necessary tools to acquire CAN data using SocketCAN
+    This will install the necessary tools to acquire CAN data using SocketCAN
 
 ```bash
 sudo apt-get install can-utils
@@ -38,11 +38,11 @@ sudo ./domake.sh
 
 ## Using Socket CAN
 
-1.  Before you can send and receive data you need to configure the interface. To do this you can use the 'ip' tool. For example if you want to set the bitrate of 500Kbit (500000 bit) to the can0 interface you can do this with&#x20;
+1.  Before you can send and receive data, you need to configure the interface. To do this, you can use the 'ip' tool. For example, if you want to set the bitrate of 500Kbit (500000 bit) to the can0 interface, you can do this with&#x20;
 
     "sudo ip link set can0 type can bitrate 500000"
 
-    If you need to setup CAN FD with bitrate of 500Kbit and data bitrate of 8Mbit&#x20;
+    If you need to set CAN FD with a bitrate of 500Kbit and data bitrate of 8Mbit&#x20;
 
     "sudo ip link set can0 type can bitrate 500000 dbitrate 8000000 fd on"
 
@@ -52,11 +52,11 @@ sudo ./domake.sh
 
     "sudo ip link set can0 type can bitrate 500000 dbitrate 8000000 fd on listen-only on|off"
 
-    We also support CANFD non ISO mode via fd-non-iso on|off
-2.  Now the bitrate is set and you can start the interface by typing
+    We also support CANFD non-ISO mode via fd-non-iso on|off
+2.  Now the bitrate is set, and you can start the interface by typing
 
     &#x20;"sudo ip link set can0 up"
-3.  After this you can send and receive data on can0. At the beginning you may just want to check some small communications. To do this you could use the tools from "can-utils". For example you could try to send data with
+3.  After this, you can send and receive data on CAN0. At the beginning, you may want to check some small communications. To do this, you could use the tools from "can-utils". For example, you could try to send data with
 
     "cansend can0 123#112233" - Simple CAN message&#x20;
 
@@ -76,6 +76,4 @@ sudo ./domake.sh
 
     "candump can0 -x" for extra details
 
-    As a prerequisite for this, is a connected and properly configured bus with
-
-    at least two communication partners
+    As a prerequisite for this is a connected and properly configured bus with at least two communication partners
