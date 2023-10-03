@@ -1,38 +1,37 @@
 # SocketCAN Installation on Raspberry PI OS
 
-1.  Clone the repository [<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>](https://github.com/InfluxTechnology/rexgen-socketcan.git)
+1. Clone the repository [<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>](https://github.com/InfluxTechnology/rexgen-socketcan.git)
 
-    _git clone_ [_<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>_](https://github.com/InfluxTechnology/rexgen-socketcan.git)
+_git clone_ [_<mark style="color:blue;">https://github.com/InfluxTechnology/rexgen-socketcan.git</mark>_](https://github.com/InfluxTechnology/rexgen-socketcan.git)
+
 2. Install raspberrypi-kernal-headers
 
 ```bash
 sudo apt-get install raspberrypi-kernel-headers
 ```
 
-3.  Install can-utils
+3. Install can-utils
 
-    This will install the necessary tools to acquire CAN data using SocketCAN
+This will install the necessary tools to acquire CAN data using SocketCAN
 
 ```bash
 sudo apt-get install can-utils
 ```
 
-&#x20;4\. Open the _rexgen-socketcan_ folder
-
+4. Open the _rexgen-socketcan_ folder
 5. Load the can-dev module
 
 ```bash
 sudo modprobe can-dev
 ```
 
-&#x20;6\.  Run the do\_make.sh script
+6. &#x20;Run the do\_make.sh script
 
 ```bash
 sudo ./domake.sh
 ```
 
-&#x20;_7._ Ignore any Warnings
-
+7. Ignore any Warnings
 8. Plugin the ReXgen Device
 9. Reboot the device
 
