@@ -2,7 +2,7 @@
 
 ## About SocketCAN Driver
 
-The SocketCAN driver allows you to use ReXgen devices as CAN interfaces within your own socketCAN-based applications. For further information on SocketCAN see https://www.kernel.org/doc/Documentation/networking/can.txt
+The SocketCAN driver allows you to use ReXgen devices as CAN interfaces within your own socketCAN-based applications. For further information on SocketCAN see [<mark style="color:blue;">https://www.kernel.org/doc/Documentation/networking/can.txt</mark>](https://www.kernel.org/doc/Documentation/networking/can.txt)&#x20;
 
 ## Getting started
 
@@ -12,7 +12,7 @@ Prerequisites: Make sure the following is installed before proceeding:
 2. gcc
 3. can-utils is required to use commands like candump/cansend etc
 
-Make sure the can-dev module is loaded properly. You can check this with "lsmod | grep can-dev" If it is not loaded yet, you can do this with
+Make sure the can-dev module is loaded properly. You can check this with "lsmod | grep can-dev." If it is not loaded yet, you can do this with
 
 "sudo modprobe can-dev"
 
@@ -50,6 +50,6 @@ Building and installing the driver while starting the script
     or\
     "candump can0 -x" for extra details
 
-    As a prerequisite for this is a connected and properly configured bus with at least two communication partners.
+    A prerequisite for this is a connected and properly configured bus with at least two communication partners.
 
 For more details, visit our [<mark style="color:blue;">GitHub</mark>](https://github.com/InfluxTechnology/rexgen-socketcan).
