@@ -2,7 +2,7 @@
 
 ## About SocketCAN Driver
 
-The SocketCAN driver allows you to use ReXgen devices as CAN interfaces within your own socketCAN-based applications. For further information on SocketCAN see [<mark style="color:blue;">https://www.kernel.org/doc/Documentation/networking/can.txt</mark>](https://www.kernel.org/doc/Documentation/networking/can.txt)&#x20;
+The SocketCAN driver allows you to use [ReXgen ](https://app.gitbook.com/o/HhTfJJOHHF3lfqYUgSrl/s/TCRfbN5hBLeUzIaKHbJ7/)devices as CAN interfaces within your socketCAN-based applications. For further information on SocketCAN, see [<mark style="color:blue;">https://www.kernel.org/doc/Documentation/networking/can.txt</mark>](https://www.kernel.org/doc/Documentation/networking/can.txt)&#x20;
 
 ## Getting started
 
