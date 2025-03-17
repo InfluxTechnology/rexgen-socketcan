@@ -28,7 +28,7 @@ sudo modprobe can-dev
 6. &#x20;Run the do\_make.sh script
 
 ```bash
-sudo ./domake.sh
+sudo ./do_make.sh
 ```
 
 7. Ignore any Warnings
